@@ -62,6 +62,7 @@ namespace MeetingSchema.API.Controllers
             return new OkObjectResult(userVM);
         }
 
+        //Get users
         [HttpGet("{id}", Name = "GetUser")]
         public IActionResult Get(int id)
         {
