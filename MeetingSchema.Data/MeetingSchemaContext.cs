@@ -57,7 +57,7 @@ namespace MeetingSchema.Data
                 .HasOne(s => s.Creator)
                 .WithMany(c => c.MeetingSchemaCreated);
 
-           modelBuilder.Entity<User>().ToTable("User");
+           modelBuilder.Entity<User>().ToTable("Users"); 
 
             modelBuilder.Entity<User>()
                 .Property(u => u.Name)
