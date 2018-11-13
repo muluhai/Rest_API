@@ -34,6 +34,7 @@ namespace MeetingSchema.API.Controllers
             _userRepository = userRepository;
         }
 
+        [HttpGet]
         public IActionResult Get()
         {
             var pagination = Request.Headers["Pagination"];
@@ -43,11 +44,11 @@ namespace MeetingSchema.API.Controllers
                 int.TryParse(vals[0], out page);
                 int.TryParse(vals[1], out pageSize);
             }
-                //Initialize the pages
-                int currentPage = page;
-                int currentPageSize = pageSize;
-                int totalUsers = _userRepository.Count();
-                int totalPages = (int)Math.Ceiling((double)totalUsers / pageSize);
+            //Initialize the pages
+            int currentPage = page;
+            int currentPageSize = pageSize;
+            int totalUsers = _userRepository.Count();
+            int totalPages = (int)Math.Ceiling((double)totalUsers / pageSize);
 
             IEnumerable<User> users = _userRepository
                 .AllIncluding(e => e.MeetingSchemaCreated)
@@ -56,7 +57,7 @@ namespace MeetingSchema.API.Controllers
                 .Take(currentPageSize)
                 .ToList();
 
-            IEnumerable<UserViewModel> userVM = Mapper.Map<IEnumerable<User>, IEnumerable<UserViewModel>> (users);
+            IEnumerable<UserViewModel> userVM = Mapper.Map<IEnumerable<User>, IEnumerable<UserViewModel>>(users);
             Response.AddPagination(page, pageSize, totalUsers, totalPages);
 
             return new OkObjectResult(userVM);
@@ -96,7 +97,7 @@ namespace MeetingSchema.API.Controllers
                 return NotFound();
             }
         }
-        
+
         [HttpPost]
         public IActionResult Create([FromBody]UserViewModel users)
         {

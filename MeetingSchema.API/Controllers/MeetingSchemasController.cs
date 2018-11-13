@@ -35,6 +35,7 @@ namespace MeetingSchema.API.Controllers
 
         }
 
+        [HttpGet]
         public IActionResult Get()
         {
             var pagenation = Request.Headers["Pagination"];

@@ -17,6 +17,8 @@ using System.Net;
 using Newtonsoft.Json.Serialization;
 using Microsoft.AspNetCore.Diagnostics;
 using MeetingSchema.API.ViewModels.Mappings;
+using Swashbuckle.AspNetCore.Swagger;
+using Microsoft.Extensions.PlatformAbstractions;
 
 namespace MeetingSchema.API
 {
@@ -30,10 +32,10 @@ namespace MeetingSchema.API
             Restful_ApplicationPath = env.WebRootPath;
 
             var builder = new ConfigurationBuilder()
-               .SetBasePath(env.ContentRootPath)
-               .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
-               .AddJsonFile($"appsettings.{env.EnvironmentName}.json", optional: true)
-               .AddEnvironmentVariables();
+                .SetBasePath(env.ContentRootPath)
+                .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
+                .AddJsonFile($"appsettings.{env.EnvironmentName}.json", optional: true)
+                .AddEnvironmentVariables();
 
 
             builder.AddEnvironmentVariables();
@@ -49,8 +51,10 @@ namespace MeetingSchema.API
         //This method are called by the CIL. This method use to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
+
+
             services.AddDbContext<MeetingSchemaContext>(options =>
-            options.UseSqlServer(Configuration.GetConnectionString("DefaultConnection")));
+                options.UseSqlServer(Configuration.GetConnectionString("DefaultConnection")));
 
             //MeetingSchema repositories
             services.AddScoped<IMeetingSchemasRepository, MeetingSchemasRepository>();
@@ -59,10 +63,10 @@ namespace MeetingSchema.API
 
             //Automapper configuration for DI
             AutoMapperConfiguration.Configure();
-           
+
             //Enable Cors CIL
             services.AddCors();
-          
+
             //Add MVC services to the services container of Resolver.
             services.AddMvc()
                 .AddJsonOptions(opts =>
@@ -70,6 +74,31 @@ namespace MeetingSchema.API
                     //Enable serialize to JSON using Camel
                     opts.SerializerSettings.ContractResolver = new CamelCasePropertyNamesContractResolver();
                 });
+
+
+            //Configure swaggerUi
+            services.AddSwaggerGen(c =>
+            {
+                c.SwaggerDoc("v1", new Info
+                {
+                    Version = "v1",
+                    Title = "Meetings API",
+                    Description = "This is rest api for meetinsplan",
+                    TermsOfService = "None",
+                    Contact = new Contact()
+                    { Name = "Meeting the doc", Email = "muehai@gmail.com", Url = "www.seglelet.com" }
+                });
+
+                c.IncludeXmlComments(GetXmlCommentsPath());
+                c.DescribeAllEnumsAsStrings();
+            });
+
+        }
+
+        private string GetXmlCommentsPath()
+        {
+            var app = PlatformServices.Default.Application;
+            return System.IO.Path.Combine(app.ApplicationBasePath, "MeetingSchema.API.xml");
         }
 
         //This method gets called by the runtime CIL. Use this method to configure the HTTP request pipeline.
@@ -90,6 +119,7 @@ namespace MeetingSchema.API
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();
+
             }
 
             app.UseStaticFiles();
@@ -117,7 +147,7 @@ namespace MeetingSchema.API
                     });
               });
 
-            //app.UseMvc();
+            app.UseMvc();
             app.UseMvc(routes =>
             {
                 routes.MapRoute(
@@ -129,11 +159,19 @@ namespace MeetingSchema.API
             });
 
 
+
+            //Add Swagger UI
+            app.UseSwagger(c => c.PreSerializeFilters.Add((swaggerDoc, httpReq) => swaggerDoc.Host = httpReq.Host.Value));
+            app.UseSwaggerUI(c =>
+            {
+                c.SwaggerEndpoint("/swagger/v1/swagger.json", "Meetings API V1");
+            });
+
             /*Initialize the MeetingSchema database using EF 
             * Comment out when you populate the database first time
             */
             //MeetingSchemaDbInitializer.Initialize(contextDb);
-            
+
         }
     }
 }
